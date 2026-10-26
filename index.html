@@ -1,0 +1,1301 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Tocador de músicas gratuitas por gênero (Audius e Internet Archive) e das músicas do seu aparelho.">
+<meta name="theme-color" content="#171a21" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Som Livre">
+<title>Som Livre</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1f232c;
+    --line: #2a2f3a;
+    --text: #e8eaf0;
+    --muted: #9aa1b2;
+    --accent: #1ed6a0;
+    --accent-ink: #06261c;
+    --danger: #ff6b6b;
+    --radius: 14px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f4f5f8;
+      --panel: #ffffff;
+      --panel-2: #eef0f4;
+      --line: #dde1e8;
+      --text: #161922;
+      --muted: #5d6475;
+      --accent: #0a9e74;
+      --accent-ink: #ffffff;
+    }
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body { height: 100dvh; }
+  header { padding-top: max(12px, env(safe-area-inset-top)) !important; padding-left: max(16px, env(safe-area-inset-left)) !important; padding-right: max(16px, env(safe-area-inset-right)) !important; }
+  footer { padding-bottom: max(10px, env(safe-area-inset-bottom)) !important; padding-left: max(16px, env(safe-area-inset-left)) !important; padding-right: max(16px, env(safe-area-inset-right)) !important; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Ajuda e instalação */
+  .hdr-actions { display: flex; gap: 6px; align-items: center; }
+  .hbtn { border: 1px solid var(--line); background: var(--panel-2); border-radius: 99px; height: 36px; min-width: 36px; padding: 0 12px; font-weight: 600; font-size: 14px; }
+  .hbtn:hover { border-color: var(--accent); }
+  .hbtn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  #help { width: min(640px, calc(100% - 24px)); max-height: calc(100dvh - 40px); padding: 0; border: 1px solid var(--line); border-radius: 18px; background: var(--panel); color: var(--text); }
+  #help::backdrop { background: rgba(0,0,0,.55); }
+  .help-top { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 18px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  .help-top h2 { margin: 0; font-size: 18px; }
+  .help-body { padding: 4px 18px 20px; }
+  .help-body details { border-bottom: 1px solid var(--line); padding: 4px 0; }
+  .help-body summary { cursor: pointer; font-weight: 700; padding: 10px 0; list-style-position: inside; }
+  .help-body p, .help-body li { color: var(--muted); max-width: 70ch; }
+  .help-body b { color: var(--text); }
+  .help-body ol, .help-body ul { padding-left: 20px; }
+  .help-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px; }
+  .help-foot { font-size: 12px; color: var(--muted); margin-top: 14px; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: grid; grid-template-rows: auto 1fr auto; overflow: hidden;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  input, select { font: inherit; color: var(--text); }
+
+  /* Cabeçalho */
+  header {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  .logo { font-weight: 800; font-size: 19px; letter-spacing: -.3px; display: flex; align-items: center; gap: 8px; margin-right: auto; }
+  .logo span { color: var(--accent); }
+  .search { display: flex; flex: 1 1 260px; max-width: 420px; }
+  .search input {
+    flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-right: 0;
+    border-radius: 10px 0 0 10px; background: var(--panel-2); outline: none;
+  }
+  .search input:focus { border-color: var(--accent); }
+  .search button { border: 0; padding: 0 14px; border-radius: 0 10px 10px 0; background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  select { padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel-2); }
+
+  /* Corpo */
+  main { display: grid; grid-template-columns: 220px 1fr; min-height: 0; }
+  #genres {
+    border-right: 1px solid var(--line); padding: 12px 10px; overflow-y: auto; background: var(--panel);
+  }
+  #genres h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 4px 8px 10px; }
+  .genre {
+    display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+    padding: 9px 10px; border: 0; border-radius: 10px; background: transparent;
+  }
+  .genre:hover { background: var(--panel-2); }
+  .genre.active { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .genre .dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .genre .cnt { margin-left: auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .genre.active .cnt { color: inherit; opacity: .8; }
+  #localBox { margin-top: 18px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .local-actions { display: flex; gap: 6px; margin: 0 6px 8px; }
+  .local-actions .btn-sm { flex: 1; padding: 6px 8px; white-space: nowrap; }
+  .local-status { font-size: 12px; color: var(--muted); margin: 0 8px 6px; }
+  .local-status:empty { display: none; }
+  .linkish { border: 0; background: none; color: var(--muted); font-size: 12px; text-decoration: underline; padding: 4px 10px; }
+  .linkish:hover { color: var(--danger); }
+  body.drop::after {
+    content: "Solte aqui para adicionar à sua biblioteca"; position: fixed; inset: 12px; z-index: 20;
+    display: grid; place-items: center; font-size: 20px; font-weight: 700; color: var(--text);
+    border: 3px dashed var(--accent); border-radius: 18px; background: rgba(15, 17, 21, .75); pointer-events: none;
+  }
+
+  #content { overflow-y: auto; padding: 20px; min-width: 0; }
+  .now {
+    position: relative; display: flex; gap: 20px; align-items: center; padding: 20px;
+    border-radius: var(--radius); background: var(--panel); border: 1px solid var(--line); overflow: hidden;
+  }
+  .now .bgart { position: absolute; inset: -40px; background-size: cover; background-position: center; filter: blur(40px) saturate(1.4); opacity: .25; pointer-events: none; }
+  .now img, .now .ph {
+    position: relative; width: 160px; height: 160px; border-radius: 12px; object-fit: cover; flex: none;
+    background: var(--panel-2); box-shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  .now .ph { display: grid; place-items: center; font-size: 56px; color: var(--muted); }
+  .now .meta { position: relative; min-width: 0; }
+  .now .kicker { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); font-weight: 700; }
+  .now h1 { margin: 4px 0 2px; font-size: 26px; line-height: 1.15; overflow-wrap: anywhere; }
+  .now .artist { color: var(--muted); font-size: 16px; }
+  .now .tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-size: 12px; padding: 3px 9px; border-radius: 99px; background: var(--panel-2); border: 1px solid var(--line); color: var(--muted); text-decoration: none; }
+  a.tag:hover { color: var(--text); }
+
+  .queue-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 26px 0 10px; flex-wrap: wrap; }
+  .queue-head h2 { margin: 0; font-size: 18px; }
+  .queue-head .info { color: var(--muted); font-size: 13px; }
+  .btn-sm { border: 1px solid var(--line); background: var(--panel); padding: 6px 12px; border-radius: 99px; font-size: 13px; }
+  .btn-sm:hover { border-color: var(--accent); }
+
+  #queue { list-style: none; margin: 0; padding: 0; }
+  #queue li {
+    display: grid; grid-template-columns: 28px 44px 1fr auto; gap: 12px; align-items: center;
+    padding: 7px 10px; border-radius: 10px; cursor: pointer;
+  }
+  #queue li:hover { background: var(--panel); }
+  #queue li.current { background: var(--panel-2); }
+  #queue li.current .t { color: var(--accent); }
+  #queue .n { color: var(--muted); font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+  #queue img, #queue .mini { width: 44px; height: 44px; border-radius: 6px; object-fit: cover; background: var(--panel-2); }
+  #queue .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #queue .a { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #queue .d { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  #queue .txt { min-width: 0; }
+
+  .empty { text-align: center; color: var(--muted); padding: 50px 10px; }
+  .empty b { display: block; color: var(--text); font-size: 18px; margin-bottom: 6px; }
+  .spinner { width: 34px; height: 34px; margin: 0 auto 14px; border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .eq { display: inline-flex; gap: 2px; align-items: flex-end; height: 14px; }
+  .eq i { width: 3px; background: var(--accent); animation: eq 0.9s ease-in-out infinite; }
+  .eq i:nth-child(2) { animation-delay: .2s; } .eq i:nth-child(3) { animation-delay: .4s; }
+  .paused .eq i { animation-play-state: paused; }
+  @keyframes eq { 0%,100% { height: 3px; } 50% { height: 14px; } }
+
+  /* Barra do player */
+  footer {
+    display: grid; grid-template-columns: 1fr minmax(0, 2fr) 1fr; gap: 16px; align-items: center;
+    padding: 10px 16px; border-top: 1px solid var(--line); background: var(--panel);
+  }
+  .mini-now { display: flex; gap: 10px; align-items: center; min-width: 0; }
+  .mini-now img { width: 46px; height: 46px; border-radius: 6px; object-fit: cover; background: var(--panel-2); flex: none; }
+  .mini-now .t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-now .a { color: var(--muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-now > div { min-width: 0; }
+  .center { display: flex; flex-direction: column; gap: 6px; align-items: center; min-width: 0; }
+  .controls { display: flex; gap: 8px; align-items: center; }
+  .ic { border: 0; background: transparent; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: var(--muted); position: relative; }
+  .ic:hover { color: var(--text); background: var(--panel-2); }
+  .ic.on { color: var(--accent); }
+  .ic.on::after { content: ""; position: absolute; bottom: 3px; width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+  .ic svg { width: 20px; height: 20px; fill: currentColor; }
+  .ic .badge { position: absolute; top: 4px; right: 4px; font-size: 9px; font-weight: 800; color: var(--accent); }
+  .play { width: 46px; height: 46px; background: var(--accent); color: var(--accent-ink); }
+  .play:hover { background: var(--accent); color: var(--accent-ink); filter: brightness(1.1); }
+  .play svg { width: 22px; height: 22px; }
+  .progress { display: flex; gap: 10px; align-items: center; width: 100%; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  input[type=range] { accent-color: var(--accent); width: 100%; cursor: pointer; }
+  .vol { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+  .vol input { width: 110px; }
+
+  #toast {
+    position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%) translateY(20px); opacity: 0;
+    background: var(--text); color: var(--bg); padding: 9px 16px; border-radius: 99px; font-size: 14px;
+    transition: all .25s; pointer-events: none; max-width: calc(100% - 32px); text-align: center; z-index: 10;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Celular */
+  @media (max-width: 760px) {
+    main { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+    #genres { border-right: 0; border-bottom: 1px solid var(--line); display: flex; gap: 6px; overflow-x: auto; padding: 10px 16px; }
+    #genres h2 { display: none; }
+    #genreList, #localBox, #localList { display: contents; }
+    .local-actions { flex: none; margin: 0; }
+    .local-status { align-self: center; white-space: nowrap; margin: 0; }
+    .linkish { flex: none; }
+    .genre { width: auto; white-space: nowrap; flex: none; background: var(--panel-2); }
+    #content { padding: 16px; }
+    .now { flex-direction: column; text-align: center; }
+    .now img, .now .ph { width: 140px; height: 140px; }
+    .now .tags { justify-content: center; }
+    footer { grid-template-columns: 1fr; gap: 8px; }
+    .vol { display: none; }
+    #queue li { grid-template-columns: 44px 1fr auto; }
+    #queue .n { display: none; }
+    .ic { width: 44px; height: 44px; }
+    .play { width: 54px; height: 54px; }
+    header { gap: 8px; }
+    .logo { margin-right: 0; flex: 1 1 auto; min-width: 0; font-size: 18px; }
+    .logo svg { width: 22px; height: 22px; }
+    #source { order: 2; flex: 0 0 auto; width: 152px; padding: 8px 6px; }
+    .hdr-actions { order: 3; }
+    .search { order: 4; flex: 1 1 100%; min-width: 0; max-width: none; }
+    #queue li { padding: 9px 6px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="var(--accent)"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+    Som<span>Livre</span>
+  </div>
+  <form class="search" id="searchForm">
+    <input id="q" type="search" placeholder="Buscar música ou artista…" autocomplete="off">
+    <button type="submit">Buscar</button>
+  </form>
+  <select id="source" title="Fonte das músicas">
+    <option value="all">Todas as fontes</option>
+    <option value="audius">Audius</option>
+    <option value="ia">Internet Archive</option>
+    <option value="local">Meu dispositivo</option>
+  </select>
+  <div class="hdr-actions">
+    <button class="hbtn primary" id="installBtn" hidden title="Instalar o Som Livre neste aparelho">Instalar</button>
+    <button class="hbtn" id="helpBtn" title="Ajuda: uso, instalação e configuração" aria-label="Ajuda">?</button>
+  </div>
+</header>
+
+<main>
+  <nav id="genres">
+    <h2>Gêneros</h2>
+    <div id="genreList"></div>
+    <div id="localBox">
+      <h2>Meu dispositivo</h2>
+      <div class="local-actions">
+        <button class="btn-sm" id="addDir" title="Adicionar uma pasta de músicas do computador/celular">+ Pasta</button>
+        <button class="btn-sm" id="addFiles" title="Adicionar arquivos de música">+ Arquivos</button>
+      </div>
+      <div class="local-status" id="localStatus"></div>
+      <div id="localList"></div>
+    </div>
+    <input type="file" id="pickFiles" multiple accept="audio/*,.mp3,.m4a,.aac,.ogg,.oga,.opus,.wav,.flac,.webm" hidden>
+    <input type="file" id="pickDir" webkitdirectory multiple hidden>
+  </nav>
+  <section id="content">
+    <div class="now" id="now">
+      <div class="bgart" id="bgart"></div>
+      <div class="ph" id="artPh">♪</div>
+      <img id="art" alt="" hidden>
+      <div class="meta">
+        <div class="kicker" id="kicker">Bem-vindo</div>
+        <h1 id="title">Escolha um gênero para começar</h1>
+        <div class="artist" id="artist">Músicas gratuitas e legais, direto da internet, em ordem aleatória.</div>
+        <div class="tags" id="tags"></div>
+      </div>
+    </div>
+
+    <div class="queue-head">
+      <div>
+        <h2 id="queueTitle">Fila</h2>
+        <div class="info" id="queueInfo"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-sm" id="reshuffle" title="Embaralhar de novo">Embaralhar</button>
+        <button class="btn-sm" id="more" title="Buscar mais músicas deste gênero">Carregar mais</button>
+      </div>
+    </div>
+    <ul id="queue"></ul>
+    <div id="status"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="mini-now">
+    <img id="miniArt" alt="" hidden>
+    <div>
+      <div class="t" id="miniTitle">—</div>
+      <div class="a" id="miniArtist"></div>
+    </div>
+  </div>
+  <div class="center">
+    <div class="controls">
+      <button class="ic on" id="shuffle" title="Aleatório (S)"><svg viewBox="0 0 24 24"><path d="M10.59 9.17 5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
+      <button class="ic" id="prev" title="Anterior (←)"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg></button>
+      <button class="ic play" id="play" title="Tocar/Pausar (Espaço)"><svg viewBox="0 0 24 24" id="playIcon"><path d="M8 5v14l11-7z"/></svg></button>
+      <button class="ic" id="next" title="Próxima (→)"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+      <button class="ic on" id="repeat" title="Repetir (R)"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg><span class="badge" id="repeatBadge"></span></button>
+    </div>
+    <div class="progress">
+      <span id="cur">0:00</span>
+      <input type="range" id="seek" min="0" max="1000" value="0">
+      <span id="dur">0:00</span>
+    </div>
+  </div>
+  <div class="vol">
+    <button class="ic" id="mute" title="Mudo (M)"><svg viewBox="0 0 24 24" id="volIcon"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg></button>
+    <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8">
+  </div>
+</footer>
+
+
+<dialog id="help" aria-labelledby="helpTitle">
+  <div class="help-top">
+    <h2 id="helpTitle">Como usar o Som Livre</h2>
+    <button class="hbtn" id="helpClose" aria-label="Fechar ajuda">Fechar</button>
+  </div>
+  <div class="help-body">
+    <div class="help-actions">
+      <button class="hbtn primary" id="helpInstall">Instalar neste aparelho</button>
+      <button class="hbtn" id="helpShare">Enviar o link para alguém</button>
+    </div>
+
+    <details open id="h-uso">
+      <summary>Ouvir música</summary>
+      <ol>
+        <li>Toque num <b>gênero</b> (na lateral, ou na faixa de botões no celular). O app monta uma fila aleatória com músicas gratuitas.</li>
+        <li>Use a <b>busca</b> para procurar uma música ou artista.</li>
+        <li><b>Carregar mais</b> traz mais músicas do mesmo gênero; <b>Embaralhar</b> sorteia a ordem de novo.</li>
+        <li>Na barra de baixo: aleatório, anterior, tocar/pausar, próxima e repetir (toque de novo para alternar entre repetir tudo, repetir uma e não repetir).</li>
+      </ol>
+      <p>Com a tela bloqueada, ou pelo fone bluetooth, os controles do aparelho também funcionam.</p>
+    </details>
+
+    <details id="h-fontes">
+      <summary>De onde vêm as músicas</summary>
+      <p><b>Audius</b>: plataforma em que os próprios artistas liberam as músicas para ouvir de graça. <b>Internet Archive</b>: acervo de netlabels, domínio público e Creative Commons. Escolha uma só fonte no seletor do topo, ou deixe em <b>Todas as fontes</b>.</p>
+      <p>As músicas em streaming precisam de internet. O app em si abre mesmo sem sinal.</p>
+    </details>
+
+    <details id="h-minhas">
+      <summary>Tocar as músicas do seu aparelho</summary>
+      <ul>
+        <li><b>+ Arquivos</b>: escolha uma ou várias músicas. No celular, elas ficam guardadas no app e continuam lá na próxima vez.</li>
+        <li><b>+ Pasta</b>: no computador (Chrome ou Edge), o app lembra a pasta e lê de novo os arquivos a cada abertura; se pedir, toque em <b>Reconectar pasta</b>. No celular, a pasta funciona como “escolher vários arquivos”.</li>
+        <li>No computador, também dá para arrastar músicas ou pastas para dentro da janela.</li>
+        <li>O gênero vem das informações do arquivo ou, se não houver, do nome da pasta (ex.: Músicas/Rock/faixa.mp3).</li>
+        <li><b>Remover biblioteca local</b> tira as músicas do app. Os arquivos originais não são apagados.</li>
+      </ul>
+      <p>Formatos aceitos: MP3, M4A, AAC, OGG, OPUS, WAV, FLAC e WEBM (o iPhone não toca OGG/OPUS em versões antigas).</p>
+    </details>
+
+    <details id="h-instalar">
+      <summary>Instalar no celular ou no computador</summary>
+      <ul>
+        <li><b>Android</b>: abra o link no Chrome e toque em <b>Instalar</b> (no topo do app ou no menu ⋮ › Instalar app / Adicionar à tela inicial).</li>
+        <li><b>iPhone e iPad</b>: abra o link no <b>Safari</b>, toque em Compartilhar (quadrado com a seta) › <b>Adicionar à Tela de Início</b>.</li>
+        <li><b>Computador</b>: no Chrome ou no Edge, clique no ícone de instalar na barra de endereço, ou em <b>Instalar</b> no topo do app.</li>
+      </ul>
+      <p>Depois de instalado, o app abre em tela cheia, com ícone próprio. Atualizações chegam sozinhas: basta fechar e abrir de novo.</p>
+    </details>
+
+    <details id="h-atalhos">
+      <summary>Atalhos de teclado</summary>
+      <p><b>Espaço</b> tocar/pausar · <b>← →</b> anterior/próxima · <b>S</b> aleatório · <b>R</b> repetir · <b>M</b> mudo.</p>
+    </details>
+
+    <details id="h-problemas">
+      <summary>Problemas comuns</summary>
+      <ul>
+        <li><b>Nada toca ou a fila vem vazia</b>: verifique a internet; tente outra fonte no seletor do topo. Se uma música falhar, o app pula para a próxima.</li>
+        <li><b>Não aparece a opção de instalar</b>: no iPhone, use o Safari (não o Chrome). No Android, use o Chrome. Se o app já estiver instalado, a opção some.</li>
+        <li><b>Minhas músicas sumiram no celular</b>: o aparelho pode limpar dados de apps quando falta espaço. Adicione os arquivos de novo.</li>
+        <li><b>Versão desatualizada</b>: feche o app por completo e abra de novo.</li>
+      </ul>
+    </details>
+
+    <details id="h-config">
+      <summary>Configuração e privacidade</summary>
+      <p>O app guarda só neste aparelho: fonte escolhida, último gênero, volume, aleatório/repetir e as músicas que você adicionou. Nada é enviado para servidor próprio. As buscas vão direto para o Audius e o Internet Archive.</p>
+      <p><b>Para quem publica o app</b>: os arquivos ficam num site estático (ex.: GitHub Pages). Para lançar uma nova versão, envie o index.html novo e aumente o número em <b>VERSAO</b> no arquivo sw.js.</p>
+    </details>
+    <div class="help-foot" id="helpVersion"></div>
+  </div>
+</dialog>
+<div id="toast"></div>
+<audio id="audio" preload="auto"></audio>
+
+<!-- Leitor de tags de áudio (ID3, MP4, FLAC) para as músicas do dispositivo -->
+<script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
+<script>
+/* =========================================================
+   Som Livre — tocador de músicas gratuitas por gênero
+   Fontes:
+     • Audius (api.audius.co) — streaming gratuito liberado pelos artistas
+     • Internet Archive (archive.org) — netlabels, domínio público e Creative Commons
+   ========================================================= */
+
+const APP_NAME = 'SomLivre';
+
+// Cada gênero mapeia para o nome usado no Audius e o termo de assunto no Internet Archive
+const GENRES = [
+  { id: 'eletronica', name: 'Eletrônica',   audius: 'Electronic',   ia: 'electronic',   color: '#00c2ff' },
+  { id: 'rock',       name: 'Rock',         audius: 'Rock',         ia: 'rock',         color: '#ff5d5d' },
+  { id: 'pop',        name: 'Pop',          audius: 'Pop',          ia: 'pop',          color: '#ff7ad9' },
+  { id: 'hiphop',     name: 'Hip-Hop / Rap',audius: 'Hip-Hop/Rap',  ia: 'hip hop',      color: '#ffb020' },
+  { id: 'jazz',       name: 'Jazz',         audius: 'Jazz',         ia: 'jazz',         color: '#c792ea' },
+  { id: 'classica',   name: 'Clássica',     audius: 'Classical',    ia: 'classical',    color: '#e0c08a' },
+  { id: 'blues',      name: 'Blues',        audius: 'Blues',        ia: 'blues',        color: '#5b8cff' },
+  { id: 'lofi',       name: 'Lo-Fi',        audius: 'Lo-Fi',        ia: 'lofi',         color: '#9ad0a6' },
+  { id: 'ambient',    name: 'Ambiente',     audius: 'Ambient',      ia: 'ambient',      color: '#7fd1c7' },
+  { id: 'house',      name: 'House',        audius: 'House',        ia: 'house',        color: '#4dd0e1' },
+  { id: 'techno',     name: 'Techno',       audius: 'Techno',       ia: 'techno',       color: '#90a4ae' },
+  { id: 'metal',      name: 'Metal',        audius: 'Metal',        ia: 'metal',        color: '#b0b0b0' },
+  { id: 'punk',       name: 'Punk',         audius: 'Punk',         ia: 'punk',         color: '#ff8a65' },
+  { id: 'folk',       name: 'Folk',         audius: 'Folk',         ia: 'folk',         color: '#c5a880' },
+  { id: 'country',    name: 'Country',      audius: 'Country',      ia: 'country',      color: '#d4a373' },
+  { id: 'reggae',     name: 'Reggae',       audius: 'Reggae',       ia: 'reggae',       color: '#7bd36b' },
+  { id: 'rnb',        name: 'R&B / Soul',   audius: 'R&B/Soul',     ia: 'soul',         color: '#f48fb1' },
+  { id: 'funk',       name: 'Funk',         audius: 'Funk',         ia: 'funk',         color: '#ffd54f' },
+  { id: 'latina',     name: 'Latina',       audius: 'Latin',        ia: 'latin',        color: '#ff9e40' },
+  { id: 'mundo',      name: 'World Music',  audius: 'World',        ia: 'world',        color: '#81c784' },
+  { id: 'trilha',     name: 'Trilha sonora',audius: 'Soundtrack',   ia: 'soundtrack',   color: '#9fa8da' },
+];
+
+/* ---------- Estado ---------- */
+const state = {
+  source: 'all',
+  genre: null,        // objeto do gênero ou {search:'...'}
+  tracks: [],         // faixas carregadas
+  order: [],          // ordem de reprodução (índices em tracks)
+  pos: -1,            // posição atual em order
+  shuffle: true,
+  repeat: 'all',      // 'all' | 'one' | 'off'
+  page: 0,
+  errors: 0,
+  loading: false,
+};
+
+const $ = id => document.getElementById(id);
+const audio = $('audio');
+
+/* ---------- Utilidades ---------- */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('somlivre.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('somlivre.' + k, JSON.stringify(v)); } catch {} },
+};
+
+function fmt(s) {
+  if (!isFinite(s) || s < 0) return '0:00';
+  s = Math.floor(s);
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = String(s % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`;
+}
+
+function parseLen(v) {
+  if (v == null) return 0;
+  if (typeof v === 'number') return v;
+  if (String(v).includes(':')) return String(v).split(':').reduce((a, b) => a * 60 + parseFloat(b || 0), 0);
+  return parseFloat(v) || 0;
+}
+
+function shuffleArr(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+async function getJSON(url, ms = 15000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } finally { clearTimeout(t); }
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+/* ---------- Fonte: Audius ---------- */
+let audiusHost = null;
+async function getAudiusHost() {
+  if (audiusHost) return audiusHost;
+  try {
+    const j = await getJSON('https://api.audius.co', 8000);
+    const hosts = (j.data || []).filter(Boolean);
+    audiusHost = hosts.length ? hosts[Math.floor(Math.random() * hosts.length)] : 'https://api.audius.co';
+  } catch { audiusHost = 'https://api.audius.co'; }
+  return audiusHost;
+}
+
+function mapAudius(host, t) {
+  return {
+    id: 'au:' + t.id,
+    title: t.title,
+    artist: t.user?.name || 'Artista desconhecido',
+    art: t.artwork?.['480x480'] || t.artwork?.['150x150'] || '',
+    thumb: t.artwork?.['150x150'] || t.artwork?.['480x480'] || '',
+    url: `${host}/v1/tracks/${t.id}/stream?app_name=${APP_NAME}`,
+    duration: t.duration || 0,
+    genre: t.genre || '',
+    source: 'Audius',
+    license: 'Streaming gratuito',
+    link: t.permalink ? 'https://audius.co' + t.permalink : 'https://audius.co',
+  };
+}
+
+const playableAudius = t => t && t.is_streamable !== false && !t.is_stream_gated && !t.is_delete;
+
+async function audiusByGenre(genre, page) {
+  const host = await getAudiusHost();
+  const times = ['month', 'year', 'allTime'];
+  const time = times[page % times.length];
+  const offset = Math.floor(page / times.length) * 100;
+  const [trend, search] = await Promise.allSettled([
+    getJSON(`${host}/v1/tracks/trending?genre=${encodeURIComponent(genre.audius)}&time=${time}&offset=${offset}&limit=100&app_name=${APP_NAME}`),
+    getJSON(`${host}/v1/tracks/search?query=${encodeURIComponent(genre.audius.split('/')[0])}&genre=${encodeURIComponent(genre.audius)}&offset=${page * 50}&limit=50&app_name=${APP_NAME}`),
+  ]);
+  const list = [
+    ...(trend.status === 'fulfilled' ? trend.value.data || [] : []),
+    ...(search.status === 'fulfilled' ? search.value.data || [] : []),
+  ];
+  if (!list.length && trend.status === 'rejected' && search.status === 'rejected') throw trend.reason;
+  return list.filter(t => playableAudius(t) && (!t.genre || t.genre === genre.audius)).map(t => mapAudius(host, t));
+}
+
+async function audiusSearch(q, page) {
+  const host = await getAudiusHost();
+  const j = await getJSON(`${host}/v1/tracks/search?query=${encodeURIComponent(q)}&offset=${page * 50}&limit=50&app_name=${APP_NAME}`);
+  return (j.data || []).filter(playableAudius).map(t => mapAudius(host, t));
+}
+
+/* ---------- Fonte: Internet Archive ---------- */
+const IA_COLLECTIONS = '(collection:netlabels OR collection:opensource_audio OR collection:audio_music)';
+
+async function iaItems(query, page) {
+  const p = new URLSearchParams({ q: query, rows: '30', page: String(page + 1), output: 'json' });
+  ['identifier', 'title', 'creator', 'licenseurl'].forEach(f => p.append('fl[]', f));
+  p.append('sort[]', 'downloads desc');
+  const j = await getJSON('https://archive.org/advancedsearch.php?' + p);
+  return j.response?.docs || [];
+}
+
+async function iaExpand(doc, genreName) {
+  const id = doc.identifier;
+  const meta = await getJSON(`https://archive.org/metadata/${encodeURIComponent(id)}`, 12000);
+  const files = (meta.files || []).filter(f => /\.mp3$/i.test(f.name) && !/_64kb|_vbr\.m3u/i.test(f.name));
+  // Prefere a versão VBR MP3 quando há várias
+  const pref = files.filter(f => f.format === 'VBR MP3');
+  const chosen = shuffleArr(pref.length ? pref : files).slice(0, 4);
+  const md = meta.metadata || {};
+  const asStr = v => Array.isArray(v) ? v[0] : v;
+  return chosen.map(f => ({
+    id: 'ia:' + id + '/' + f.name,
+    title: f.title || f.name.replace(/\.mp3$/i, '').replace(/^.*\//, '').replace(/[_]+/g, ' '),
+    artist: f.artist || f.creator || asStr(md.creator) || asStr(doc.creator) || 'Artista desconhecido',
+    art: `https://archive.org/services/img/${encodeURIComponent(id)}`,
+    thumb: `https://archive.org/services/img/${encodeURIComponent(id)}`,
+    url: `https://archive.org/download/${encodeURIComponent(id)}/${f.name.split('/').map(encodeURIComponent).join('/')}`,
+    duration: parseLen(f.length),
+    genre: genreName || asStr(md.subject) || '',
+    source: 'Internet Archive',
+    license: md.licenseurl ? (/creativecommons/.test(md.licenseurl) ? 'Creative Commons' : 'Licença livre') : 'Domínio público / livre',
+    link: `https://archive.org/details/${encodeURIComponent(id)}`,
+  }));
+}
+
+async function iaFrom(query, page, genreName) {
+  const docs = shuffleArr(await iaItems(query, page)).slice(0, 14);
+  const res = await Promise.allSettled(docs.map(d => iaExpand(d, genreName)));
+  return res.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+}
+
+const iaByGenre = (g, page) =>
+  iaFrom(`subject:"${g.ia}" AND mediatype:audio AND ${IA_COLLECTIONS}`, page, g.name);
+
+const iaSearch = (q, page) =>
+  iaFrom(`(${q.replace(/[():"]/g, ' ')}) AND mediatype:audio AND ${IA_COLLECTIONS}`, page, '');
+
+/* ---------- Fonte: músicas do dispositivo ---------- */
+const AUDIO_RE = /\.(mp3|m4a|aac|ogg|oga|opus|wav|flac|webm)$/i;
+const ID3V1 = ('Blues|Classic Rock|Country|Dance|Disco|Funk|Grunge|Hip-Hop|Jazz|Metal|New Age|Oldies|Other|Pop|R&B|Rap|Reggae|Rock|Techno|Industrial|' +
+  'Alternative|Ska|Death Metal|Pranks|Soundtrack|Euro-Techno|Ambient|Trip-Hop|Vocal|Jazz+Funk|Fusion|Trance|Classical|Instrumental|Acid|House|' +
+  'Game|Sound Clip|Gospel|Noise|Alternative Rock|Bass|Soul|Punk|Space|Meditative|Instrumental Pop|Instrumental Rock|Ethnic|Gothic|Darkwave|' +
+  'Techno-Industrial|Electronic|Pop-Folk|Eurodance|Dream|Southern Rock|Comedy|Cult|Gangsta|Top 40|Christian Rap|Pop/Funk|Jungle|Native American|' +
+  'Cabaret|New Wave|Psychedelic|Rave|Showtunes|Trailer|Lo-Fi|Tribal|Acid Punk|Acid Jazz|Polka|Retro|Musical|Rock & Roll|Hard Rock').split('|');
+
+// Associa o gênero escrito na tag a um dos gêneros do app (a ordem importa)
+const GENRE_RULES = [
+  ['hiphop', /hip.?hop|\brap\b|trap|gangsta/],
+  ['lofi', /lo.?fi/],
+  ['rnb', /r&b|\brnb\b|soul|motown/],
+  ['metal', /metal|hardcore/],
+  ['punk', /punk/],
+  ['rock', /rock|grunge|indie|alternativ|new wave|psychedel|gothic/],
+  ['house', /house/],
+  ['techno', /techno|industrial/],
+  ['ambient', /ambient|new age|meditat|chill/],
+  ['eletronica', /electr|eletr|\bedm\b|dance|trance|dubstep|drum|jungle|rave|synth|\bidm\b|disco/],
+  ['jazz', /jazz|swing|bebop|fusion/],
+  ['blues', /blues/],
+  ['classica', /classical|cl[aá]ssic|orchest|orquest|opera|baroque|barroc|symphon|sinf/],
+  ['country', /country|sertanej|bluegrass/],
+  ['folk', /folk|acoustic|ac[uú]stic/],
+  ['reggae', /reggae|\bska\b|dancehall/],
+  ['funk', /funk/],
+  ['latina', /latin|salsa|reggaeton|cumbia|bachata|tango|bossa|samba|mpb|forr[oó]|pagode|ax[eé]|brasil|brazil/],
+  ['trilha', /soundtrack|trilha|score|game|musical|showtune/],
+  ['mundo', /world|ethnic|tribal|afro|celtic/],
+  ['pop', /pop|top 40|vocal/],
+];
+const mapGenre = g => (GENRE_RULES.find(([, re]) => re.test(String(g).toLowerCase())) || [])[0] || null;
+
+function cleanGenre(g) {
+  if (Array.isArray(g)) g = g[0];
+  g = String(g || '').replace(/\u0000/g, '').trim();
+  const m = g.match(/^\((\d+)\)\s*(.*)$/);
+  if (m) g = m[2] || ID3V1[+m[1]] || '';
+  else if (/^\d+$/.test(g)) g = ID3V1[+g] || '';
+  return g.split(/[;\\]/)[0].trim();
+}
+
+const local = { tracks: [], dirs: [], needReconnect: false, busy: false };
+
+// IndexedDB guarda as pastas escolhidas, para não precisar escolher de novo a cada visita
+const idb = {
+  db: null,
+  open() {
+    return this.db ||= new Promise((res, rej) => {
+      const r = indexedDB.open('somlivre', 2);
+      r.onupgradeneeded = () => {
+        if (!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv');
+        if (!r.result.objectStoreNames.contains('files')) r.result.createObjectStore('files');
+      };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  },
+  async get(k) {
+    try {
+      const db = await this.open();
+      return await new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+    } catch { return undefined; }
+  },
+  async set(k, v) {
+    try {
+      const db = await this.open();
+      await new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    } catch {}
+  },
+  // Músicas escolhidas pelo seletor de arquivos (no celular não há como lembrar a pasta)
+  async putFiles(list) {
+    try {
+      const db = await this.open();
+      await new Promise((res, rej) => { const tx = db.transaction('files', 'readwrite'); const st = tx.objectStore('files'); list.forEach(x => st.put(x, x.id)); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+      return true;
+    } catch (e) { console.warn(e); return false; }
+  },
+  async allFiles() {
+    try {
+      const db = await this.open();
+      return await new Promise((res, rej) => { const q = db.transaction('files').objectStore('files').getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => rej(q.error); });
+    } catch { return []; }
+  },
+  async clearFiles() {
+    try {
+      const db = await this.open();
+      await new Promise((res, rej) => { const tx = db.transaction('files', 'readwrite'); tx.objectStore('files').clear(); tx.oncomplete = res; tx.onerror = () => rej(tx.error); });
+    } catch {}
+  },
+};
+
+function readTags(file) {
+  return new Promise(res => {
+    if (!window.jsmediatags) return res({});
+    const to = setTimeout(() => res({}), 8000);
+    try {
+      jsmediatags.read(file, {
+        onSuccess: r => { clearTimeout(to); res(r.tags || {}); },
+        onError: () => { clearTimeout(to); res({}); },
+      });
+    } catch { clearTimeout(to); res({}); }
+  });
+}
+
+async function makeLocalTrack(file, path, id) {
+  const tags = await readTags(file);
+  // Sem tags, tenta "01 - Artista - Título.mp3" / "Artista - Título.mp3"
+  const base = file.name.replace(/\.[^.]+$/, '').replace(/_/g, ' ').replace(/^\d{1,3}(\s*[.\-]\s*|\s+)/, '').trim();
+  const parts = base.split(' - ');
+  const fnArtist = parts.length > 1 ? parts[0].trim() : '';
+  const fnTitle = (parts.length > 1 ? parts.slice(1).join(' - ') : base).trim();
+
+  // Gênero: tag do arquivo; se não houver, nome da pasta (ex.: Músicas/Rock/faixa.mp3)
+  let genre = cleanGenre(tags.genre);
+  const dirs = path.split('/').slice(0, -1);
+  if (!genre) genre = [...dirs].reverse().find(d => mapGenre(d)) || '';
+
+  let art = '';
+  if (tags.picture?.data?.length) {
+    try { art = URL.createObjectURL(new Blob([new Uint8Array(tags.picture.data)], { type: tags.picture.format || 'image/jpeg' })); } catch {}
+  }
+  return {
+    id, file,
+    title: String(tags.title || fnTitle || file.name).trim(),
+    artist: String(tags.artist || fnArtist || 'Artista desconhecido').trim(),
+    album: tags.album ? String(tags.album).trim() : '',
+    art, thumb: art, url: '', duration: 0,
+    genre, genreKey: genre.toLowerCase(), genreId: genre ? mapGenre(genre) : null,
+    source: 'Meu dispositivo', license: 'Arquivo local', link: '',
+  };
+}
+
+async function scanDir(dir, prefix, out) {
+  for await (const [name, h] of dir.entries()) {
+    const p = prefix + '/' + name;
+    if (h.kind === 'file') { if (AUDIO_RE.test(name)) out.push({ handle: h, path: p }); }
+    else await scanDir(h, p, out);
+  }
+  return out;
+}
+
+// items: [{ file } ou { handle }, path]
+async function addLocal(items, save = true) {
+  if (!items.length) return 0;
+  const toSave = [];
+  const known = new Set(local.tracks.map(t => t.id));
+  const added = [];
+  let i = 0, done = 0;
+  local.busy = true;
+  const progress = () => { $('localStatus').textContent = `Lendo músicas… ${done}/${items.length}`; };
+  progress();
+  async function worker() {
+    while (i < items.length) {
+      const it = items[i++];
+      try {
+        const file = it.file || await it.handle.getFile();
+        const id = 'lo:' + it.path + ':' + file.size;
+        if (!known.has(id)) {
+          known.add(id); added.push(await makeLocalTrack(file, it.path, id));
+          if (save && it.file) toSave.push({ id, path: it.path, file });
+        }
+      } catch (e) { console.warn('Falha ao ler', it.path, e); }
+      if (++done % 5 === 0) progress();
+    }
+  }
+  await Promise.all(Array.from({ length: 6 }, worker));
+  local.tracks.push(...added);
+  if (toSave.length) {
+    navigator.storage?.persist?.().catch(() => {});
+    $('localStatus').textContent = 'Guardando no aparelho…';
+    if (!(await idb.putFiles(toSave))) toast('Sem espaço para guardar as músicas; elas tocam só até fechar o app');
+  }
+  local.busy = false;
+  renderGenres();
+  return added.length;
+}
+
+function reportAdded(n) {
+  toast(n ? `${n} músicas adicionadas à sua biblioteca` : 'Nenhuma música nova encontrada');
+  if (n && !state.genre) load({ local: 'all', name: 'Minhas músicas' }, false);
+}
+
+async function pickFolder() {
+  if (!('showDirectoryPicker' in window)) return $('pickDir').click(); // Firefox/Safari/celular
+  try {
+    const d = await showDirectoryPicker({ id: 'somlivre-musicas', mode: 'read', startIn: 'music' });
+    for (const e of local.dirs) if (await e.isSameEntry(d)) { toast('Essa pasta já está na biblioteca'); return; }
+    local.dirs.push(d);
+    idb.set('dirs', local.dirs);
+    $('localStatus').textContent = 'Procurando arquivos…';
+    reportAdded(await addLocal(await scanDir(d, d.name, [])));
+  } catch (e) {
+    if (e.name !== 'AbortError') { console.warn(e); toast('Não foi possível abrir a pasta'); }
+  }
+}
+
+async function scanSavedDirs() {
+  local.needReconnect = false;
+  $('localStatus').textContent = 'Procurando arquivos…';
+  const items = [];
+  for (const d of local.dirs) { try { await scanDir(d, d.name, items); } catch (e) { console.warn(e); } }
+  return addLocal(items);
+}
+
+async function restoreDirs() {
+  if (!('showDirectoryPicker' in window)) return;
+  local.dirs = (await idb.get('dirs')) || [];
+  if (!local.dirs.length) return;
+  const perms = await Promise.all(local.dirs.map(d => d.queryPermission({ mode: 'read' }).catch(() => 'denied')));
+  if (perms.every(p => p === 'granted')) await scanSavedDirs();
+  else { local.needReconnect = true; renderGenres(); }
+}
+
+async function reconnectDirs() {
+  try {
+    for (const d of local.dirs) await d.requestPermission({ mode: 'read' });
+    reportAdded(await scanSavedDirs());
+  } catch (e) { console.warn(e); toast('Permissão negada para ler a pasta'); }
+}
+
+function clearLocal() {
+  if (!confirm('Remover as músicas do dispositivo da biblioteca? (Os arquivos não são apagados.)')) return;
+  local.tracks.forEach(t => t.art && URL.revokeObjectURL(t.art));
+  local.tracks = []; local.dirs = []; local.needReconnect = false;
+  idb.set('dirs', []);
+  idb.clearFiles();
+  renderGenres();
+  toast('Biblioteca local limpa');
+}
+
+function localFilter(g) {
+  if (g.local === 'all') return local.tracks;
+  if (g.local === '__none') return local.tracks.filter(t => !t.genre);
+  return local.tracks.filter(t => t.genreKey === g.local);
+}
+
+function localSearch(q) {
+  q = q.toLowerCase();
+  return local.tracks.filter(t => `${t.title} ${t.artist} ${t.album} ${t.genre}`.toLowerCase().includes(q));
+}
+
+// Arrastar e soltar arquivos ou pastas na janela
+function entryFiles(entry, out) {
+  return new Promise(res => {
+    if (entry.isFile) {
+      entry.file(f => { if (AUDIO_RE.test(f.name)) out.push({ file: f, path: entry.fullPath.replace(/^\//, '') }); res(); }, () => res());
+    } else if (entry.isDirectory) {
+      const reader = entry.createReader(), all = [];
+      const readAll = () => reader.readEntries(async ents => {
+        if (ents.length) { all.push(...ents); readAll(); }
+        else { for (const en of all) await entryFiles(en, out); res(); }
+      }, () => res());
+      readAll();
+    } else res();
+  });
+}
+
+/* ---------- Carregamento ---------- */
+async function fetchTracks(page) {
+  const g = state.genre;
+  if (g.local) return page ? [] : localFilter(g);
+  const jobs = [];
+  const src = state.source;
+  const useAu = src === 'all' || src === 'audius', useIa = src === 'all' || src === 'ia', useLo = src === 'all' || src === 'local';
+  if (useLo && page === 0) jobs.push(Promise.resolve(g.search ? localSearch(g.search) : local.tracks.filter(t => t.genreId === g.id)));
+  if (g.search) {
+    if (useAu) jobs.push(audiusSearch(g.search, page));
+    if (useIa) jobs.push(iaSearch(g.search, page));
+  } else {
+    if (useAu) jobs.push(audiusByGenre(g, page));
+    if (useIa) jobs.push(iaByGenre(g, page));
+  }
+  const res = await Promise.allSettled(jobs);
+  res.filter(r => r.status === 'rejected').forEach(r => console.warn('Falha em uma fonte:', r.reason));
+  return res.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+}
+
+async function load(genre, autoplay = true) {
+  state.genre = genre;
+  state.page = 0;
+  state.tracks = []; state.order = []; state.pos = -1;
+  renderGenres();
+  $('queueTitle').textContent = genre.search ? `Busca: “${genre.search}”` : genre.local ? `Meu dispositivo · ${genre.name}` : genre.name;
+  renderQueue();
+  setStatus('loading', genre.local ? 'Abrindo suas músicas…' : 'Procurando músicas gratuitas…');
+  state.loading = true;
+  const tracks = await fetchTracks(0);
+  state.loading = false;
+  if (state.genre !== genre) return; // usuário trocou de gênero enquanto carregava
+  if (!tracks.length) {
+    if (state.source === 'local' && !local.tracks.length)
+      setStatus('empty', 'Sua biblioteca local está vazia', 'Use “+ Pasta” ou “+ Arquivos” no menu, ou arraste músicas para esta janela.');
+    else
+      setStatus('empty', 'Nenhuma música encontrada', 'Tente outro gênero, outra fonte ou verifique sua conexão.');
+    return;
+  }
+  setStatus();
+  addTracks(tracks);
+  if (genre.id) store.set('genre', genre.id);
+  if (autoplay) playAt(0);
+}
+
+function addTracks(list) {
+  const seen = new Set(state.tracks.map(t => t.id));
+  const fresh = list.filter(t => !seen.has(t.id) && seen.add(t.id));
+  const start = state.tracks.length;
+  state.tracks.push(...fresh);
+  const idx = fresh.map((_, i) => start + i);
+  // Novas faixas entram no fim da fila (embaralhadas, se o modo aleatório estiver ativo)
+  state.order.push(...(state.shuffle ? shuffleArr(idx) : idx));
+  renderQueue();
+  return fresh.length;
+}
+
+async function loadMore() {
+  if (!state.genre || state.loading) return 0;
+  state.loading = true;
+  $('more').textContent = 'Carregando…';
+  state.page++;
+  const genre = state.genre;
+  let added = 0;
+  try {
+    const tracks = await fetchTracks(state.page);
+    if (state.genre === genre) added = addTracks(tracks);
+  } finally {
+    state.loading = false;
+    $('more').textContent = 'Carregar mais';
+  }
+  toast(added ? `${added} novas músicas adicionadas` : 'Não há mais músicas novas por aqui');
+  return added;
+}
+
+function setStatus(kind, title, sub) {
+  const el = $('status');
+  if (!kind) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="empty">${kind === 'loading' ? '<div class="spinner"></div>' : ''}<b>${esc(title)}</b>${esc(sub || '')}</div>`;
+}
+
+/* ---------- Reprodução ---------- */
+function current() { return state.tracks[state.order[state.pos]]; }
+
+// Arquivos locais tocam por um endereço blob: temporário, liberado ao trocar de faixa
+let localUrl = '';
+function srcFor(t) {
+  if (localUrl) { URL.revokeObjectURL(localUrl); localUrl = ''; }
+  if (!t.file) return t.url;
+  return (localUrl = URL.createObjectURL(t.file));
+}
+
+function playAt(pos) {
+  if (pos < 0 || pos >= state.order.length) return;
+  state.pos = pos;
+  const t = current();
+  audio.src = srcFor(t);
+  audio.play().catch(err => {
+    if (err.name === 'NotAllowedError') toast('Clique em ▶ para começar a tocar');
+  });
+  renderNow(t);
+  renderQueue(true);
+  updateMediaSession(t);
+}
+
+async function next(auto = false) {
+  if (!state.order.length) return;
+  if (auto && state.repeat === 'one') { audio.currentTime = 0; audio.play(); return; }
+  if (state.pos + 1 < state.order.length) return playAt(state.pos + 1);
+  // Fim da fila: tenta buscar mais músicas; se não houver, recomeça (repetir) ou para
+  if (await loadMore() > 0) return playAt(state.pos + 1);
+  if (state.repeat === 'off' && auto) { toast('Fim da fila'); return; }
+  if (state.shuffle) shuffleArr(state.order);
+  playAt(0);
+}
+
+function prev() {
+  if (audio.currentTime > 3 || state.pos <= 0) { audio.currentTime = 0; return; }
+  playAt(state.pos - 1);
+}
+
+function togglePlay() {
+  if (!audio.src) {
+    if (state.order.length) playAt(Math.max(state.pos, 0));
+    else load(GENRES[Math.floor(Math.random() * GENRES.length)]);
+    return;
+  }
+  audio.paused ? audio.play() : audio.pause();
+}
+
+function reshuffle() {
+  if (!state.order.length) return;
+  const cur = state.order[state.pos];
+  const rest = state.order.filter((_, i) => i !== state.pos);
+  state.order = state.pos >= 0 ? [cur, ...shuffleArr(rest)] : shuffleArr(rest);
+  state.pos = state.pos >= 0 ? 0 : -1;
+  renderQueue(true);
+}
+
+function setShuffle(on) {
+  state.shuffle = on;
+  $('shuffle').classList.toggle('on', on);
+  store.set('shuffle', on);
+  if (!state.order.length) return;
+  if (on) reshuffle();
+  else {
+    // Volta à ordem original mantendo a faixa atual
+    const cur = state.order[state.pos];
+    state.order = state.tracks.map((_, i) => i);
+    state.pos = cur ?? -1;
+    renderQueue(true);
+  }
+}
+
+function cycleRepeat() {
+  state.repeat = { all: 'one', one: 'off', off: 'all' }[state.repeat];
+  applyRepeat();
+  toast({ all: 'Repetir: fila inteira', one: 'Repetir: só esta música', off: 'Repetir: desligado' }[state.repeat]);
+}
+function applyRepeat() {
+  $('repeat').classList.toggle('on', state.repeat !== 'off');
+  $('repeatBadge').textContent = state.repeat === 'one' ? '1' : '';
+  store.set('repeat', state.repeat);
+}
+
+/* ---------- Renderização ---------- */
+function genreButton(label, color, count, active, onclick) {
+  const b = document.createElement('button');
+  b.className = 'genre' + (active ? ' active' : '');
+  b.innerHTML = `<span class="dot" style="background:${color}"></span>${esc(label)}${count ? `<span class="cnt">${count}</span>` : ''}`;
+  b.onclick = onclick;
+  return b;
+}
+
+function renderGenres() {
+  // Gêneros gerais (o número mostra quantas músicas suas há em cada um)
+  const counts = {};
+  local.tracks.forEach(t => { if (t.genreId) counts[t.genreId] = (counts[t.genreId] || 0) + 1; });
+  const list = $('genreList');
+  list.replaceChildren(...GENRES.map(g =>
+    genreButton(g.name, g.color, state.source !== 'audius' && state.source !== 'ia' ? counts[g.id] : 0, state.genre === g, () => load(g))));
+
+  // Meu dispositivo: gêneros exatamente como estão nas tags dos seus arquivos
+  const box = $('localList');
+  const items = [];
+  const isActive = key => state.genre?.local === key;
+  if (local.needReconnect) {
+    const b = document.createElement('button');
+    b.className = 'btn-sm'; b.style.margin = '0 6px 6px';
+    b.textContent = `↻ Reconectar pasta${local.dirs.length > 1 ? 's' : ''} salva${local.dirs.length > 1 ? 's' : ''}`;
+    b.onclick = reconnectDirs;
+    items.push(b);
+  }
+  if (local.tracks.length) {
+    items.push(genreButton('Todas as minhas', 'var(--accent)', local.tracks.length, isActive('all'), () => load({ local: 'all', name: 'Todas' })));
+    const groups = new Map();
+    local.tracks.forEach(t => {
+      if (!t.genre) return;
+      const gr = groups.get(t.genreKey) || { name: t.genre, n: 0, id: t.genreId };
+      gr.n++; groups.set(t.genreKey, gr);
+    });
+    [...groups].sort((a, b) => b[1].n - a[1].n).forEach(([key, gr]) => {
+      const color = GENRES.find(g => g.id === gr.id)?.color || 'var(--muted)';
+      items.push(genreButton(gr.name, color, gr.n, isActive(key), () => load({ local: key, name: gr.name })));
+    });
+    const none = local.tracks.filter(t => !t.genre).length;
+    if (none) items.push(genreButton('Sem gênero', 'var(--line)', none, isActive('__none'), () => load({ local: '__none', name: 'Sem gênero' })));
+    const clr = document.createElement('button');
+    clr.className = 'linkish'; clr.textContent = 'Remover biblioteca local';
+    clr.onclick = clearLocal;
+    items.push(clr);
+  }
+  box.replaceChildren(...items);
+  if (!local.busy) $('localStatus').textContent = local.tracks.length || local.needReconnect ? '' : 'Toque músicas salvas aqui no aparelho.';
+}
+
+function renderNow(t) {
+  const g = state.genre;
+  $('kicker').textContent = g?.search ? 'Tocando · busca' : `Tocando · ${g?.name || ''}`;
+  $('title').textContent = t.title;
+  $('artist').textContent = t.artist;
+  $('tags').innerHTML = [
+    `<span class="tag">${esc(t.source)}</span>`,
+    `<span class="tag">${esc(t.license)}</span>`,
+    t.genre ? `<span class="tag">${esc(t.genre)}</span>` : '',
+    t.album ? `<span class="tag">${esc(t.album)}</span>` : '',
+    t.link ? `<a class="tag" href="${esc(t.link)}" target="_blank" rel="noopener">Ver na fonte ↗</a>` : '',
+  ].join('');
+  const art = $('art'), ph = $('artPh'), mini = $('miniArt');
+  if (t.art) {
+    art.src = t.art; art.hidden = false; ph.hidden = true;
+    art.onerror = () => { art.hidden = true; ph.hidden = false; };
+    mini.src = t.thumb || t.art; mini.hidden = false;
+    $('bgart').style.backgroundImage = `url("${t.art}")`;
+  } else {
+    art.hidden = true; ph.hidden = false; mini.hidden = true;
+    $('bgart').style.backgroundImage = '';
+  }
+  $('miniTitle').textContent = t.title;
+  $('miniArtist').textContent = t.artist;
+  document.title = `${t.title} · ${t.artist} — Som Livre`;
+}
+
+function renderQueue(scroll = false) {
+  const ul = $('queue');
+  const n = state.order.length;
+  $('queueInfo').textContent = n ? `${n} músicas · ${state.shuffle ? 'ordem aleatória' : 'ordem original'}` : '';
+  ul.innerHTML = state.order.map((ti, i) => {
+    const t = state.tracks[ti];
+    const cur = i === state.pos;
+    const num = cur ? `<span class="eq"><i></i><i></i><i></i></span>` : i + 1;
+    const img = t.thumb ? `<img loading="lazy" src="${esc(t.thumb)}" alt="" onerror="this.style.visibility='hidden'">` : `<div class="mini"></div>`;
+    return `<li data-i="${i}" class="${cur ? 'current' + (audio.paused ? ' paused' : '') : ''}">
+      <span class="n">${num}</span>${img}
+      <div class="txt"><div class="t">${esc(t.title)}</div><div class="a">${esc(t.artist)} · ${esc(t.source)}</div></div>
+      <span class="d">${t.duration ? fmt(t.duration) : ''}</span></li>`;
+  }).join('');
+  if (scroll) ul.querySelector('.current')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+
+function setPlayIcon() {
+  $('playIcon').innerHTML = audio.paused
+    ? '<path d="M8 5v14l11-7z"/>'
+    : '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+  $('queue').querySelector('.current')?.classList.toggle('paused', audio.paused);
+}
+
+/* ---------- Media Session (controles do sistema / fone bluetooth) ---------- */
+function updateMediaSession(t) {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: t.title, artist: t.artist, album: state.genre?.name || 'Som Livre',
+    artwork: t.art ? [{ src: t.art, sizes: '480x480' }] : [],
+  });
+}
+if ('mediaSession' in navigator) {
+  navigator.mediaSession.setActionHandler('play', () => audio.play());
+  navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+  navigator.mediaSession.setActionHandler('nexttrack', () => next());
+  navigator.mediaSession.setActionHandler('previoustrack', () => prev());
+}
+
+/* ---------- Eventos ---------- */
+audio.addEventListener('play', setPlayIcon);
+audio.addEventListener('pause', setPlayIcon);
+audio.addEventListener('playing', () => { state.errors = 0; });
+audio.addEventListener('ended', () => next(true));
+audio.addEventListener('error', () => {
+  if (!audio.src || state.pos < 0) return;
+  state.errors++;
+  if (state.errors > 6) { toast('Várias faixas indisponíveis seguidas. Tente outro gênero.'); state.errors = 0; return; }
+  toast('Faixa indisponível, pulando…');
+  setTimeout(() => next(true), 600);
+});
+let seeking = false;
+audio.addEventListener('timeupdate', () => {
+  $('cur').textContent = fmt(audio.currentTime);
+  if (!seeking && audio.duration) $('seek').value = (audio.currentTime / audio.duration) * 1000;
+});
+audio.addEventListener('loadedmetadata', () => { $('dur').textContent = fmt(audio.duration); });
+
+$('seek').addEventListener('input', () => { seeking = true; $('cur').textContent = fmt(($('seek').value / 1000) * (audio.duration || 0)); });
+$('seek').addEventListener('change', () => { if (audio.duration) audio.currentTime = ($('seek').value / 1000) * audio.duration; seeking = false; });
+
+$('play').onclick = togglePlay;
+$('next').onclick = () => next();
+$('prev').onclick = prev;
+$('shuffle').onclick = () => { setShuffle(!state.shuffle); toast(state.shuffle ? 'Ordem aleatória ligada' : 'Ordem aleatória desligada'); };
+$('repeat').onclick = cycleRepeat;
+$('reshuffle').onclick = () => { if (!state.shuffle) setShuffle(true); else reshuffle(); toast('Fila embaralhada'); };
+$('more').onclick = loadMore;
+$('queue').onclick = e => { const li = e.target.closest('li'); if (li) playAt(+li.dataset.i); };
+
+const vol = $('volume');
+vol.oninput = () => { audio.volume = +vol.value; audio.muted = false; store.set('volume', audio.volume); };
+$('mute').onclick = () => { audio.muted = !audio.muted; $('mute').classList.toggle('on', audio.muted); };
+
+$('source').onchange = e => {
+  state.source = e.target.value; store.set('source', state.source);
+  if (state.genre && !state.genre.local) load(state.genre);
+  else renderGenres();
+};
+
+$('searchForm').onsubmit = e => {
+  e.preventDefault();
+  const q = $('q').value.trim();
+  if (q) load({ search: q, name: 'Busca' });
+};
+
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, select, textarea')) return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  else if (e.key === 'ArrowRight') next();
+  else if (e.key === 'ArrowLeft') prev();
+  else if (e.key.toLowerCase() === 's') $('shuffle').click();
+  else if (e.key.toLowerCase() === 'r') cycleRepeat();
+  else if (e.key.toLowerCase() === 'm') $('mute').click();
+});
+
+// Músicas do dispositivo
+$('addDir').onclick = pickFolder;
+$('addFiles').onclick = () => $('pickFiles').click();
+$('pickFiles').onchange = async e => {
+  const items = [...e.target.files].filter(f => AUDIO_RE.test(f.name) || f.type.startsWith('audio/')).map(f => ({ file: f, path: f.name }));
+  e.target.value = '';
+  reportAdded(await addLocal(items));
+};
+$('pickDir').onchange = async e => {
+  const items = [...e.target.files].filter(f => AUDIO_RE.test(f.name)).map(f => ({ file: f, path: f.webkitRelativePath || f.name }));
+  e.target.value = '';
+  reportAdded(await addLocal(items));
+};
+document.addEventListener('dragover', e => {
+  if (![...e.dataTransfer.types].includes('Files')) return;
+  e.preventDefault();
+  document.body.classList.add('drop');
+});
+document.addEventListener('dragleave', e => { if (!e.relatedTarget) document.body.classList.remove('drop'); });
+document.addEventListener('drop', async e => {
+  if (![...e.dataTransfer.types].includes('Files')) return;
+  e.preventDefault();
+  document.body.classList.remove('drop');
+  // As entradas precisam ser capturadas antes de qualquer await
+  const entries = [...e.dataTransfer.items].map(i => i.webkitGetAsEntry?.()).filter(Boolean);
+  const items = [];
+  if (entries.length) for (const en of entries) await entryFiles(en, items);
+  else [...e.dataTransfer.files].forEach(f => AUDIO_RE.test(f.name) && items.push({ file: f, path: f.name }));
+  reportAdded(await addLocal(items));
+});
+
+/* ---------- Ajuda, instalação e funcionamento offline ---------- */
+const APP_VERSION = '1.1';
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+let installEvt = null;
+
+function openHelp(sec) {
+  const d = $('help');
+  if (sec) d.querySelectorAll('details').forEach(x => { x.open = x.id === sec; });
+  $('helpInstall').hidden = isStandalone();
+  $('helpVersion').textContent = `Som Livre ${APP_VERSION}` + (isStandalone() ? ' · instalado' : '');
+  d.showModal();
+}
+$('helpBtn').onclick = () => openHelp();
+$('helpClose').onclick = () => $('help').close();
+$('help').addEventListener('click', e => { if (e.target === $('help')) $('help').close(); });
+
+async function doInstall() {
+  if (installEvt) {
+    installEvt.prompt();
+    const r = await installEvt.userChoice.catch(() => null);
+    if (r?.outcome === 'accepted') { installEvt = null; $('installBtn').hidden = true; }
+  } else if ($('help').open) {
+    $('help').querySelectorAll('details').forEach(x => { x.open = x.id === 'h-instalar'; });
+    toast(isIOS ? 'No Safari: Compartilhar › Adicionar à Tela de Início' : 'Use o menu do navegador › Instalar app');
+  } else openHelp('h-instalar');
+}
+$('installBtn').onclick = doInstall;
+$('helpInstall').onclick = doInstall;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('installBtn').hidden = false; });
+addEventListener('appinstalled', () => { installEvt = null; $('installBtn').hidden = true; toast('Som Livre instalado'); });
+
+$('helpShare').onclick = async () => {
+  const url = location.origin + location.pathname;
+  const text = 'Som Livre: músicas gratuitas por gênero. Abra o link e instale (iPhone: pelo Safari › Compartilhar › Adicionar à Tela de Início).';
+  try {
+    if (navigator.share) await navigator.share({ title: 'Som Livre', text, url });
+    else { await navigator.clipboard.writeText(text + ' ' + url); toast('Link copiado'); }
+  } catch (e) { if (e.name !== 'AbortError') toast('Não foi possível compartilhar. Link: ' + url); }
+};
+
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW', e)));
+}
+
+/* ---------- Início ---------- */
+(async function init() {
+  state.source = store.get('source', 'all');
+  $('source').value = state.source;
+  state.shuffle = store.get('shuffle', true);
+  $('shuffle').classList.toggle('on', state.shuffle);
+  state.repeat = store.get('repeat', 'all');
+  applyRepeat();
+  audio.volume = vol.value = store.get('volume', 0.8);
+  renderGenres();
+  await restoreDirs().catch(e => console.warn(e)); // reabre as pastas salvas, se houver permissão
+  const saved = await idb.allFiles();               // músicas guardadas no aparelho
+  if (saved.length) { await addLocal(saved.map(x => ({ file: x.file, path: x.path })), false); renderGenres(); }
+  // Pré-carrega o último gênero escolhido (sem tocar automaticamente)
+  const last = GENRES.find(g => g.id === store.get('genre', null));
+  if (last) load(last, false);
+  else setStatus('empty', 'Escolha um gênero', 'As músicas serão tocadas em ordem aleatória. Atalhos: Espaço, ← →, S, R, M.');
+})();
+</script>
+</body>
+</html>
