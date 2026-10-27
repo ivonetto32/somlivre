@@ -1,15 +1,15 @@
 /* Som Livre — service worker
    Guarda a "casca" do app para abrir mesmo sem internet.
    Ao publicar uma nova versão do index.html, aumente VERSAO. */
-const VERSAO = 'somlivre-v1.1';
+const VERSAO = 'somlivre-v1.2';
 const CASCA = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './icons/icon-192.png',
-  './icons/icon-512.png',
-  './icons/maskable-512.png',
-  './icons/apple-touch-icon.png',
+  './icon-192.png',
+  './icon-512.png',
+  './maskable-512.png',
+  './apple-touch-icon.png',
 ];
 // Leitor de tags das músicas locais: guardado se possível, sem travar a instalação
 const EXTRA = 'https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js';
