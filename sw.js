@@ -1,11 +1,11 @@
 /* Som Livre — service worker
    Guarda a "casca" do app para abrir mesmo sem internet.
    Ao publicar uma nova versão do index.html, aumente VERSAO. */
-const VERSAO = 'somlivre-v1.2';
+const VERSAO = 'somlivre-v1.3';
 const CASCA = [
   './',
   './index.html',
-  './manifest.webmanifest',
+  './app.webmanifest',
   './icon-192.png',
   './icon-512.png',
   './maskable-512.png',
